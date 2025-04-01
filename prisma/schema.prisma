@@ -9,6 +9,94 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  username     String
+  firstname    String         @default("")
+  lastname     String         @default("")
+  email        String?        @unique
+  password     String
+  profileImage String?
+  coverImage   String?
+  createdAt    DateTime       @default(now()) @db.Timestamp(0)
+  updatedAt    DateTime       @updatedAt @db.Timestamp(0)
+  Sample       Sample[]
+  Subscription Subscription[]
+  Purchase     Purchase[]
+
+  @@map("user")
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  planType  String
+  startDate DateTime @default(now()) @db.Timestamp(0)
+  endDate   DateTime @db.Timestamp(0)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("subscrption")
+}
+
+model Sample {
+  id              Int         @id @default(autoincrement())
+  title           String
+  trackType       String
+  visibility      Boolean
+  releaseDate     DateTime
+  price           Float
+  genres          Json
+  text_info       String
+  audio_url       String
+  album_cover_url String?
+  createdAt       DateTime    @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime    @updatedAt @db.Timestamp(0)
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id])
+  purchase        Purchase[]
+  sampleTag       sampleTag[]
+
+  @@map("sample")
+}
+
+model Purchase {
+  id            Int           @id @default(autoincrement())
+  amount        Float
+  purchaseDate  DateTime
+  paymentStatus PaymentStatus
+  sampleId      Int
+  sample        Sample        @relation(fields: [sampleId], references: [id])
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@map("purchase")
+}
+
+model Tag {
+  id        Int         @id @default(autoincrement())
+  name      String
+  category  String
+  sampleTag sampleTag[]
+
+  @@map("tag")
+}
+
+model sampleTag {
+  id       Int    @id @default(autoincrement())
+  sampleId Int
+  sample   Sample @relation(fields: [sampleId], references: [id])
+  tagId    Int
+  tag      Tag    @relation(fields: [tagId], references: [id])
+
+  @@map("sampletag")
 }
